@@ -48,6 +48,79 @@ v1 的稳定版本为 1.9.2，可以通过 `git checkout v1` 来切换到 v1 版
 
 ![面包板效果图](docs/v1/wiring2.jpg)
 
+### Cytron Maker Feather AIoT S3（社区接线）
+
+本仓库支持 [Cytron Maker Feather AIoT S3](https://www.cytron.io/p-maker-feather-aiot-s3)（ESP32-S3，8 MB Flash，OPI PSRAM）的一种 **DIY 组合**：Cytron **ST7789 240×240** SPI 屏（7 线、模块上 CS 常接 GND）、**INMP441** I2S 麦克风、**MAX98357** I2S 功放。下表引脚名为开发板丝印 **Dxx**。本仓库内参考文件：[针脚图](docs/MAKER-FEATHER-AIOT-S3%20Pinout.png)、[开发板说明书（PDF）](docs/Maker%20Feather%20AIoT%20S3%20Datasheet.pdf)（最新资料以 Cytron 官网为准）。
+
+**物料清单**
+
+| 器件 | 作用 |
+|------|------|
+| Cytron Maker Feather AIoT S3 | 主控 |
+| Cytron（或兼容）ST7789 240×240 IPS，7 线 SPI | 显示屏 |
+| INMP441 模块 | I2S 麦克风 |
+| MAX98357A / I2S 功放模块 | 喇叭输出 |
+| 喇叭（4–8 Ω）、USB 线、杜邦线 | — |
+
+**显示屏（ST7789 7 线）→ Feather**
+
+| 屏 | Feather | 说明 |
+|----|---------|------|
+| GND | GND | 共地 |
+| VCC | 3V3 | ESP32-S3 请用 3.3 V |
+| SCL | **D17**（SCK） | SPI 时钟 |
+| SDA | **D8**（MOSI） | SPI 数据 |
+| RES | **D16** | 复位 |
+| DC | **D18** | 命令/数据 |
+| BLK | **VPeripheral** 或 悬空 / 3V3 | Cytron：BLK 悬空常亮；拉低关。BLK 接 VPeripheral 时由 **GPIO11** 控制供电轨 |
+
+**软件 CS 说明：** 模块无 CS 引脚，驱动仍需要 **Dummy CS**：固件使用 **D7**，**不要把 D7 接到屏幕**。
+
+**INMP441 → Feather**
+
+| INMP441 | Feather |
+|---------|---------|
+| VDD | 3V3 |
+| GND | GND |
+| L/R | GND（单声道） |
+| SCK | **D42**（丝印 **SDA**，I2S BCLK） |
+| WS | **D41**（丝印 **SCL**，I2S LRCK） |
+| SD | **D40**（I2S DIN） |
+
+**MAX98357 → Feather**
+
+| MAX98357 | Feather |
+|----------|---------|
+| Vin | **VUSB**（USB 5 V） |
+| GND | GND |
+| LRC | **D41**（与麦克风共用 WS） |
+| BCLK | **D42**（与麦克风共用 BCLK） |
+| DIN | **D48**（I2S DOUT） |
+
+**编译与烧录（ESP-IDF）**
+
+1. 安装 **ESP-IDF 5.4+**（5.5.x 亦可）。Windows 建议使用开始菜单中的 **ESP-IDF PowerShell**，确保 `idf.py` 与 **Python 3.11** 虚拟环境正确（避免其它终端里 Python 3.13 抢 PATH）。
+2. 若 PowerShell 禁止脚本：先执行 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` 再运行 `export.ps1`，或在 **cmd** 中使用 `export.bat`。
+3. 在项目根目录执行：
+
+```bash
+python scripts/release.py maker-feather-aiot-s3 --name maker-feather-aiot-s3
+```
+
+若提示 **Skipping … zip already exists**，请删除 `releases` 下对应 zip 后重试，或在已生成正确 `sdkconfig` 后直接使用 `idf.py build`。
+
+4. 烧录（将 `COMx` 换成实际端口，如 `COM15`）：
+
+```bash
+idf.py -p COMx flash monitor
+```
+
+**menuconfig 方式：** 将 **Board Type** 选为 **Cytron Maker Feather AIoT S3**，Flash **8 MB**，分区表选 **v2 / 8 MB**（与 `release.py` 等效）。
+
+更细的背光与引脚说明见 `main/boards/maker-feather-aiot-s3/config.h`。英文说明见 [README.md](README.md#cytron-maker-feather-aiot-s3-community-wiring)。
+
+**固件交互：** 板载 **D3** 用户键映射为 `ToggleChatState()`（与启动后 BOOT 键同样用于切换对话/唤醒逻辑）。**D46** WS2812 作为 `Led` 输出，状态灯效与其它板一致，在 **说话（TTS）** 状态下为 **绿色闪烁**。
+
 ### 支持 70 多个开源硬件（仅展示部分）
 
 - <a href="https://oshwhub.com/li-chuang-kai-fa-ban/li-chuang-shi-zhan-pai-esp32-s3-kai-fa-ban" target="_blank" title="立创·实战派 ESP32-S3 开发板">立创·实战派 ESP32-S3 开发板</a>
@@ -62,6 +135,7 @@ v1 的稳定版本为 1.9.2，可以通过 `git checkout v1` 来切换到 v1 版
 - <a href="https://github.com/WMnologo/xingzhi-ai" target="_blank" title="无名科技Nologo-星智-1.54">无名科技 Nologo-星智-1.54TFT</a>
 - <a href="https://www.seeedstudio.com/SenseCAP-Watcher-W1-A-p-5979.html" target="_blank" title="SenseCAP Watcher">SenseCAP Watcher</a>
 - <a href="https://www.bilibili.com/video/BV1BHJtz6E2S/" target="_blank" title="ESP-HI 超低成本机器狗">ESP-HI 超低成本机器狗</a>
+- <a href="https://www.cytron.io/p-maker-feather-aiot-s3" target="_blank" title="Cytron Maker Feather AIoT S3">Cytron Maker Feather AIoT S3</a>（接线与编译说明见本文「Cytron Maker Feather AIoT S3（社区接线）」一节）
 
 <div style="display: flex; justify-content: space-between;">
   <a href="docs/v1/lichuang-s3.jpg" target="_blank" title="立创·实战派 ESP32-S3 开发板">

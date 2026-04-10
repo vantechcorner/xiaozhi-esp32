@@ -48,6 +48,80 @@ Breadboard demo:
 
 ![Breadboard Demo](docs/v1/wiring2.jpg)
 
+### Cytron Maker Feather AIoT S3 (community wiring)
+
+This repository includes a board profile for the [Cytron Maker Feather AIoT S3](https://www.cytron.io/p-maker-feather-aiot-s3) (ESP32-S3, 8 MB flash, OPI PSRAM) with a **DIY stack**: Cytron **ST7789 240×240** SPI module (7-pin, no CS), **INMP441** I2S microphone, and **MAX98357** I2S amplifier. Pin names below use **Feather silkscreen** (Dxx). Local reference files: [pinout diagram](docs/MAKER-FEATHER-AIOT-S3%20Pinout.png), [board datasheet (PDF)](docs/Maker%20Feather%20AIoT%20S3%20Datasheet.pdf) (also see Cytron’s product page for the latest official docs).
+
+**Bill of materials**
+
+| Item | Role |
+|------|------|
+| Cytron Maker Feather AIoT S3 | Main MCU board |
+| Cytron (or compatible) ST7789 240×240 IPS, 7-pin SPI | Display (CS tied to GND on module) |
+| INMP441 breakout | I2S microphone |
+| MAX98357A/I2S amp breakout | Speaker output |
+| Speaker (4–8 Ω), USB cable, jumper wires | — |
+
+**Display (ST7789, 7-pin) → Feather**
+
+| Display | Feather | Notes |
+|---------|---------|--------|
+| GND | GND | Common ground |
+| VCC | 3V3 | Use 3.3 V with ESP32-S3 |
+| SCL | **D17** (SCK) | SPI clock |
+| SDA | **D8** (MOSI) | SPI data |
+| RES | **D16** | Reset |
+| DC | **D18** | Command / data select |
+| BLK | **VPeripheral** *or* NC / 3V3 | Cytron: NC = backlight on; LOW = off. Firmware can drive **GPIO11** (VPeripheral enable) when BLK is powered from that rail |
+
+**Software SPI CS (important):** the module has **no CS pin**. ESP-IDF’s LCD SPI driver still needs a **dummy CS GPIO**: **D7** is used in firmware — **do not connect D7 to the display** (leave it unconnected).
+
+**INMP441 → Feather**
+
+| INMP441 | Feather |
+|---------|---------|
+| VDD | 3V3 |
+| GND | GND |
+| L/R | GND (mono) |
+| SCK | **D42** (Feather label **SDA**, I2S BCLK) |
+| WS | **D41** (Feather label **SCL**, I2S LRCK) |
+| SD | **D40** (I2S DIN) |
+
+**MAX98357 → Feather**
+
+| MAX98357 | Feather |
+|----------|---------|
+| Vin | **VUSB** (5 V from USB for headroom) |
+| GND | GND |
+| LRC | **D41** (shared WS with mic) |
+| BCLK | **D42** (shared BCLK with mic) |
+| DIN | **D48** (I2S DOUT) |
+
+**Build and flash (ESP-IDF)**
+
+1. Install **ESP-IDF 5.4+** (5.5.x is fine). On Windows, use **ESP-IDF PowerShell** from the Start menu so `idf.py` and the correct **Python 3.11** environment are active (avoid a system Python 3.13 taking precedence in other terminals).
+2. If PowerShell blocks scripts: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` before `export.ps1`, or use `export.bat` from **cmd.exe**.
+3. From the project root:
+
+```bash
+# Recommended: sets esp32s3, appends board + 8 MB / v2 partition lines to sdkconfig, build, merge-bin, zip
+python scripts/release.py maker-feather-aiot-s3 --name maker-feather-aiot-s3
+```
+
+If `release.py` prints **Skipping … zip already exists**, delete `releases/v<version>_maker-feather-aiot-s3.zip` and run the command again, or use `idf.py build` after a successful `release.py` once.
+
+4. Flash (replace `COMx` with your port, e.g. `COM15`):
+
+```bash
+idf.py -p COMx flash monitor
+```
+
+**Menuconfig alternative:** set **Board Type** to **Cytron Maker Feather AIoT S3 (…)** and **Flash size** to **8 MB** with partition table **v2 8 MB** if you do not use `release.py`.
+
+Hardware details and optional backlight wiring (VPeripheral vs always-on BLK) are documented in `main/boards/maker-feather-aiot-s3/config.h`.
+
+**Firmware UX (onboard peripherals):** **D3** user button calls `ToggleChatState()` (same chat toggle as BOOT after startup, for wake/activate without using the BOOT pin). **D46** WS2812 NeoPixel is the `Led` output: it follows the usual state colours (scroll while starting, blink for Wi-Fi config, etc.) and **blinks green** while the device is in **speaking** state (assistant TTS).
+
 ### Supports 70+ Open Source Hardware (Partial List)
 
 - <a href="https://oshwhub.com/li-chuang-kai-fa-ban/li-chuang-shi-zhan-pai-esp32-s3-kai-fa-ban" target="_blank" title="LiChuang ESP32-S3 Development Board">LiChuang ESP32-S3 Development Board</a>
@@ -62,6 +136,7 @@ Breadboard demo:
 - <a href="https://github.com/WMnologo/xingzhi-ai" target="_blank" title="WMnologo-Xingzhi-1.54">WMnologo-Xingzhi-1.54TFT</a>
 - <a href="https://www.seeedstudio.com/SenseCAP-Watcher-W1-A-p-5979.html" target="_blank" title="SenseCAP Watcher">SenseCAP Watcher</a>
 - <a href="https://www.bilibili.com/video/BV1BHJtz6E2S/" target="_blank" title="ESP-HI Low Cost Robot Dog">ESP-HI Low Cost Robot Dog</a>
+- <a href="https://www.cytron.io/p-maker-feather-aiot-s3" target="_blank" title="Cytron Maker Feather AIoT S3">Cytron Maker Feather AIoT S3</a> (see [wiring section](#cytron-maker-feather-aiot-s3-community-wiring) above)
 
 <div style="display: flex; justify-content: space-between;">
   <a href="docs/v1/lichuang-s3.jpg" target="_blank" title="LiChuang ESP32-S3 Development Board">
