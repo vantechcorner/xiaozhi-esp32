@@ -115,7 +115,7 @@ python scripts/release.py maker-feather-aiot-s3 --name maker-feather-aiot-s3
 idf.py -p COMx flash monitor
 ```
 
-**menuconfig 方式：** 将 **Board Type** 选为 **Cytron Maker Feather AIoT S3**，Flash **8 MB**，分区表选 **v2 / 8 MB**（与 `release.py` 等效）。
+**menuconfig 方式：** 将 **Board Type** 选为 **Cytron Maker Feather AIoT S3**，Flash **8 MB**，分区表选 **v2 / 8 MB**（与 `release.py` 等效）。界面语言请在 **Default Language** 中选 **English**，状态栏即显示英文（如 “Connecting…”、“Listening…”、“Loading assets…”）。使用 `release.py` 时 `config.json` 已附带英文语言选项；若仍为中文，执行 `idf.py fullclean` 后重新编译。
 
 更细的背光与引脚说明见 `main/boards/maker-feather-aiot-s3/config.h`。英文说明见 [README.md](README.md#cytron-maker-feather-aiot-s3-community-wiring)。
 

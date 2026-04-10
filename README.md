@@ -116,7 +116,7 @@ If `release.py` prints **Skipping … zip already exists**, delete `releases/v<v
 idf.py -p COMx flash monitor
 ```
 
-**Menuconfig alternative:** set **Board Type** to **Cytron Maker Feather AIoT S3 (…)** and **Flash size** to **8 MB** with partition table **v2 8 MB** if you do not use `release.py`.
+**Menuconfig alternative:** set **Board Type** to **Cytron Maker Feather AIoT S3 (…)** and **Flash size** to **8 MB** with partition table **v2 8 MB** if you do not use `release.py`. Under **Default Language**, choose **English** so status text uses `en-US` strings (e.g. “Connecting…”, “Listening…”, “Loading assets…”). The board’s `config.json` already appends English when you use `release.py`; if you still see Chinese after changing language, run `idf.py fullclean` and rebuild.
 
 Hardware details and optional backlight wiring (VPeripheral vs always-on BLK) are documented in `main/boards/maker-feather-aiot-s3/config.h`.
 
